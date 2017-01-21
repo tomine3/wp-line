@@ -1,5 +1,8 @@
 <?php
 
+define("MAX_ACTION_NUM", 5);
+define("MAX_COLUMNS_NUM", 5);
+
 require_once( '../../../' . '/wp-load.php' );
 
 //ライセンストークンの取得
@@ -48,15 +51,26 @@ $response_format_sticker = [
     "stickerId" => "",
     ];
 
-$buttons_actions_element = [
+$actions_postback_element = [
     "type" => "postback",
     "label" => "Buy",
-    "data" => "action=buy&itemid=123"
+    "data" => "action=buy&itemid=123",
+    "text" => "aaa"
     ];
 
-$buttons_actions = [];
+$actions_uri_element = [
+    "type" => "uri",
+    "label" => "Buy",
+    "text" => ""
+    ];
 
-array_push($buttons_actions,$buttons_actions_element);
+$actions_message_element = [
+    "type" => "message",
+    "label" => "Buy",
+    "uri" => ""
+    ];
+
+$template_actions = [];
 
 $response_format_template_buttons = [
     "type" => "template",
@@ -66,10 +80,29 @@ $response_format_template_buttons = [
         "thumbnailImageUrl" => "https://example.com/bot/images/image.jpg",
         "title" => "Menu",
         "text" => "Please select",
-        "actions" => $buttons_actions
+        "actions" => $template_actions
         ]
     ];
-    
+
+$clumns_element = [
+        "thumbnailImageUrl" => "https://example.com/bot/images/image.jpg",
+        "title" => "Menu",
+        "text" => "Please select",
+        "actions" => $template_actions
+    ];
+
+$template_clumns = [];
+
+
+$response_format_template_carousel = [
+    "type" => "template",
+    "altText" => "this is a buttons template",
+    "template" => [
+        "type" => "carousel",
+        "columns" => $template_clumns
+        ]
+    ];
+
 $post_data = [
     "replyToken" => $replyToken,
     "messages" => [$response_format_text]
@@ -131,10 +164,90 @@ while($reply->have_posts()) : $reply->the_post();
             case 'template':
                 //$response_format_sticker["packageId"] = strval(strip_tags(get_post_meta($post->ID, packageid, true)));
                 //$response_format_sticker["stickerId"] = strval(strip_tags(get_post_meta($post->ID, stickerid, true)));
-                $post_data = [
-                    "replyToken" => $replyToken,
-                    "messages" => [$response_format_template_buttons]
-                    ];
+                $template_type = get_post_meta($post->ID, template_type, true);
+                $response_format_template_buttons["altText"] = strval(strip_tags(get_post_meta($post->ID, alttext, true)));
+                $response_format_template_buttons["template"]["type"] = $template_type;
+                switch ($template_type) {
+                    case 'buttons':
+                        $response_format_template_buttons["template"]["thumbnailImageUrl"] = strval(strip_tags(get_post_meta($post->ID, thumbnailimageurl, true)));
+                        $response_format_template_buttons["template"]["title"] = strval(strip_tags(get_post_meta($post->ID, template_buttons_title, true)));
+                        $response_format_template_buttons["template"]["text"] = strval(strip_tags(get_post_meta($post->ID, template_buttons_text, true)));
+                        for( $i = 1; $i <= MAX_ACTION_NUM; $i++){
+                            $action_type = strval(strip_tags(get_post_meta($post->ID, actions_type.$i, true)));
+                            $action_label = strval(strip_tags(get_post_meta($post->ID, action_label.$i, true)));
+                            switch ($action_type) {
+                                case 'postback':
+                                    $actions_postback_element["label"] = $action_label;
+                                    $actions_postback_element["data"] = strval(strip_tags(get_post_meta($post->ID, action_data.$i, true)));
+                                    $actions_postback_element["text"] = strval(strip_tags(get_post_meta($post->ID, action_text.$i, true)));
+                                    array_push($template_actions,$actions_postback_element);
+                                    break;
+                                case 'message' :
+                                    $actions_message_element["label"] = $action_label;
+                                    $actions_message_element["text"] = strval(strip_tags(get_post_meta($post->ID, action_text.$i, true)));
+                                    array_push($template_actions,$actions_message_element);
+                                    break;
+                                case 'uri' :
+                                    $actions_uri_element["label"] = $action_label;
+                                    $actions_uri_element["uri"] = strval(strip_tags(get_post_meta($post->ID, action_uri.$i, true)));
+                                    array_push($template_actions,$actions_uri_element);
+                                    break;
+                                default:
+                                    break;
+                            }
+                        }
+                        $response_format_template_buttons["template"]["actions"] = $template_actions;
+                        $post_data = [
+                            "replyToken" => $replyToken,
+                            "messages" => [$response_format_template_buttons]
+                            ];
+                        break;
+                    case 'carousel':
+                        for( $j = 1; $j <= MAX_COLUMNS_NUM; $j++){
+                            $template_actions = [];
+                            $columns_id = intval(get_post_meta($post->ID, columns.$j , true));
+                            if($columns_id !== 0){
+                                for( $i = 1; $i <= MAX_ACTION_NUM; $i++){
+                                    $action_type = strval(strip_tags(get_post_meta($columns_id, actions_type.$i, true)));
+                                    $action_label = strval(strip_tags(get_post_meta($columns_id, action_label.$i, true)));
+                                    switch ($action_type) {
+                                        case 'postback':
+                                            $actions_postback_element["label"] = $action_label;
+                                            $actions_postback_element["data"] = strval(strip_tags(get_post_meta($columns_id, action_data.$i, true)));
+                                            $actions_postback_element["text"] = strval(strip_tags(get_post_meta($columns_id, action_text.$i, true)));
+                                            array_push($template_actions,$actions_postback_element);
+                                            break;
+                                        case 'message' :
+                                            $actions_message_element["label"] = $action_label;
+                                            $actions_message_element["text"] = strval(strip_tags(get_post_meta($columns_id, action_text.$i, true)));
+                                            array_push($template_actions,$actions_message_element);
+                                            break;
+                                        case 'uri' :
+                                            $actions_uri_element["label"] = $action_label;
+                                            $actions_uri_element["uri"] = strval(strip_tags(get_post_meta($columns_id, action_uri.$i, true)));
+                                            array_push($template_actions,$actions_uri_element);
+                                            break;
+                                        default:
+                                            break;
+                                    }
+                                }
+                                $clumns_element["actions"] = $template_actions;
+                                $clumns_element["thumbnailImageUrl"] = strval(strip_tags(get_post_meta($columns_id, thumbnailimageurl, true)));
+                                $clumns_element["title"] = strval(strip_tags(get_post_meta($columns_id, template_buttons_title, true)));
+                                $clumns_element["text"] = strval(strip_tags(get_post_meta($columns_id, template_buttons_text, true)));
+                                $clumns_element["text"] = $action_type;
+                                array_push($template_clumns,$clumns_element);
+                            }
+                        }
+                        $response_format_template_carousel["template"]["columns"] = $template_clumns;
+                        $post_data = [
+                            "replyToken" => $replyToken,
+                            "messages" => [$response_format_template_carousel]
+                            ];
+                        break;
+                    default:
+                        break;
+                }
                 break;
             default:
                 break;
