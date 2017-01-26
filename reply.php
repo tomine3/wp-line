@@ -280,14 +280,21 @@ $result = curl_exec($ch);
 curl_close($ch);
 
 function matching_type_check($matcing_type, $title, $text){
-    if($matcing_type === 'f_match'){
-        if($title === $text){
-            return true;
-        }
+    $title_array = [];
+    $title_array = explode('#', $title);
+    if($title_array === false){
+        array_push($title_array, $title);
     }
-    else if($matcing_type === 'p_match'){
-        if(strpos($text, $title) !== false){
-            return true;
+    foreach ($title_array as $value) {
+        if($matcing_type === 'f_match'){
+            if($value === $text){
+                return true;
+            }
+        }
+        else if($matcing_type === 'p_match'){
+            if(strpos($text, $value) !== false){
+                return true;
+            }
         }
     }
     return false;
