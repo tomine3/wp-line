@@ -117,7 +117,11 @@ $replyRule = array(
 //カスタム投稿タイプ「Reply Rule」から返信データを抽出
 $reply = new WP_Query($replyRule);
 while($reply->have_posts()) : $reply->the_post();
-    if(get_the_title() == $text){
+    $matcing_type = strip_tags(get_post_meta($post->ID, matching_type, true));
+    $title = get_the_title();
+    $ismatch = matching_type_check($matcing_type, $title, $text);
+    //if($title === $text){
+    if($ismatch === true){
         $reply_type = get_post_meta($post->ID, reply_type, true);
         switch ($reply_type) {
             case 'text':
@@ -274,3 +278,17 @@ curl_setopt($ch, CURLOPT_HTTPHEADER, array(
     ));
 $result = curl_exec($ch);
 curl_close($ch);
+
+function matching_type_check($matcing_type, $title, $text){
+    if($matcing_type === 'f_match'){
+        if($title === $text){
+            return true;
+        }
+    }
+    else if($matcing_type === 'p_match'){
+        if(strpos($text, $title) !== false){
+            return true;
+        }
+    }
+    return false;
+}
