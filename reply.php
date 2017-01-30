@@ -10,6 +10,7 @@ $accessToken = get_option('line_accesstoken');
 
 //ユーザーからのメッセージ取得
 $json_string = file_get_contents('php://input');
+//file_put_contents('response.json', $json_string, FILE_APPEND | LOCK_EX);
 
 $jsonObj = json_decode($json_string);
 
@@ -19,10 +20,12 @@ $text = $jsonObj->{"events"}[0]->{"message"}->{"text"};
 //ReplyToken取得
 $replyToken = $jsonObj->{"events"}[0]->{"replyToken"};
 
+$event_type = $jsonObj->{"events"}[0]->{"type"};
+
 //返信データ作成
 $response_format_text = [
     "type" => "text",
-    "text" => "aa"
+    "text" => $event_type
     ];
 
 $response_format_image = [
@@ -113,6 +116,13 @@ $replyRule = array(
     "orderby"	=> "date",
     "order"		=> "DESC"
 );
+
+if ($event_type === "join" || $event_type === "follow"){
+    registId($jsonObj->{"events"}[0]->{"source"}->{"userId"}, $jsonObj->{"events"}[0]->{"source"}->{"type"}, $event_type = $jsonObj->{"events"}[0]->{"timestamp"});
+}
+else if( $event_type === "leave" || $event_type === "unfollow"){
+    deleteId($jsonObj->{"events"}[0]->{"source"}->{"userId"}, $jsonObj->{"events"}[0]->{"source"}->{"type"}, $event_type = $jsonObj->{"events"}[0]->{"timestamp"});
+}
 
 //カスタム投稿タイプ「Reply Rule」から返信データを抽出
 $reply = new WP_Query($replyRule);
@@ -297,5 +307,75 @@ function matching_type_check($matcing_type, $title, $text){
             }
         }
     }
+    return false;
+}
+
+function registId($user_id, $user_type, $timestamp){
+    
+    $exist_user_post_id = isUser($user_id, $user_type);
+    wp_reset_postdata();
+    
+    if($exist_user_post_id !== false){
+        $user_post = array(
+            'post_type'     => 'send_user'
+        );
+        $update_id = wp_update_post( $user_post );
+        if($update_id) {
+            update_post_meta($insert_id, 'time_stamp', $timestamp);
+            update_post_meta($insert_id, 'isdelete', false);
+        }
+    }
+    else{
+        $user_post = array(
+            'post_title'    => $user_type.$timestamp,
+            'post_status'   => 'publish',
+            'post_author'   => 1,
+            'post_type'     => 'send_user'
+        );
+        $insert_id = wp_insert_post( $user_post );
+        if($insert_id) {
+            update_post_meta($insert_id, 'user_type', $user_type);
+            update_post_meta($insert_id, 'user_id', $user_id);
+            update_post_meta($insert_id, 'time_stamp', $timestamp);
+            update_post_meta($insert_id, 'isdelete', false);
+        }
+    }
+}
+
+function deleteId($user_id, $user_type, $timestamp){
+    
+    $exist_user_post_id = isUser($user_id, $user_type);
+    wp_reset_postdata();
+    
+    file_put_contents('test.txt', 'ok', FILE_APPEND | LOCK_EX);
+    if($exist_user_post_id !== false){
+        file_put_contents('test.txt', 'if', FILE_APPEND | LOCK_EX);
+        $user_post = array(
+            'post_type'     => 'send_user'
+        );
+        $update_id = wp_update_post( $user_post );
+        
+        if($update_id) {
+            update_post_meta($update_id, 'time_stamp', $timestamp);
+            update_post_meta($update_id, 'isdelete', true);
+        }
+    }
+}
+
+function isUser($user_id, $user_type){
+
+    $sendUser = array(
+        "post_type" => "send_user",
+        "orderby"	=> "date",
+        "order"		=> "DESC"
+    );
+    $userdata = new WP_Query($sendUser);
+    while($userdata->have_posts()) : $userdata->the_post();
+        $exist_user_id = strip_tags(get_post_meta(get_the_ID(), user_id, true));
+        $exist_user_type = strip_tags(get_post_meta(get_the_ID(), user_type, true));
+        if($exist_user_id === $user_id && $exist_user_type === $user_type){
+            return $post->ID;
+        }
+    endwhile;
     return false;
 }

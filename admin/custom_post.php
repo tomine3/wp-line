@@ -69,5 +69,38 @@ register_taxonomy('pushtype',array (
     'singular_label' => 'Push Message'
 ) );
 
+/*Send User の設定*/
+register_post_type('send_user', array(
+'label' => 'Send User',
+'public' => true,
+'has_archive' => true,
+'supports' => array('title','editor','revisions','thumbnail',),
+'labels' => array (
+    'name' => 'Send User',
+    'singular_name' => 'Send User',
+    'menu_name' => 'Send User',
+    'add_new' => 'add Send User',
+    'add_new_item' => 'add Send User',
+    'edit' => 'update',
+    'edit_item' => 'update Send User',
+    'new_item' => 'add Send User',
+    'view' => 'display Send User',
+    'view_item' => 'display Send User',
+    'search_items' => 'search Send User',
+    'not_found' => 'not found',
+    'not_found_in_trash' => 'not found',
+    'parent' => 'present',
+),) );
+
+/*Send User分類 (usertype) の設定*/
+register_taxonomy('usertype',array (
+0 => 'usertype',
+),array(
+    'hierarchical' => true,
+    'label' => 'type of Send User',
+    'rewrite' => array('slug' => 'usertype'),
+    'singular_label' => 'Send User'
+) );
+
 flush_rewrite_rules();
 }
