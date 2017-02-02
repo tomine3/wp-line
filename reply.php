@@ -142,16 +142,16 @@ while($reply->have_posts()) : $reply->the_post();
                     ];
                 break;
             case 'image':
-                $response_format_image["originalContentUrl"] = strip_tags(get_post_meta($post->ID, image_originalcontenturl, true));
-                $response_format_image["previewImageUrl"] = strip_tags(get_post_meta($post->ID, image_previewimageurl, true));
+                $response_format_image["originalContentUrl"] = strip_tags(get_post_meta($post->ID, originalcontenturl, true));
+                $response_format_image["previewImageUrl"] = strip_tags(get_post_meta($post->ID, previewimageurl, true));
                 $post_data = [
                     "replyToken" => $replyToken,
                     "messages" => [$response_format_image]
                     ];
                 break;
             case 'video':
-                $response_format_video["originalContentUrl"] = strip_tags(get_post_meta($post->ID, video_originalcontenturl, true));
-                $response_format_video["previewImageUrl"] = strip_tags(get_post_meta($post->ID, video_previewimageurl, true));
+                $response_format_video["originalContentUrl"] = strip_tags(get_post_meta($post->ID, originalcontenturl, true));
+                $response_format_video["previewImageUrl"] = strip_tags(get_post_meta($post->ID, previewimageurl, true));
                 $post_data = [
                     "replyToken" => $replyToken,
                     "messages" => [$response_format_video]
