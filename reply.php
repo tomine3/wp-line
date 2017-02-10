@@ -10,7 +10,7 @@ $accessToken = get_option('line_accesstoken');
 
 //ユーザーからのメッセージ取得
 $json_string = file_get_contents('php://input');
-//file_put_contents('response.json', $json_string, FILE_APPEND | LOCK_EX);
+//file_put_contents('user.txt', "update" ."\r\n", FILE_APPEND | LOCK_EX);
 
 $jsonObj = json_decode($json_string);
 
@@ -321,8 +321,8 @@ function registId($user_id, $user_type, $timestamp){
         );
         $update_id = wp_update_post( $user_post );
         if($update_id) {
-            update_post_meta($insert_id, 'time_stamp', $timestamp);
-            update_post_meta($insert_id, 'isdelete', false);
+            update_post_meta($update_id, 'time_stamp', $timestamp);
+            update_post_meta($update_id, 'isdelete', false);
         }
     }
     else{
@@ -349,7 +349,6 @@ function deleteId($user_id, $user_type, $timestamp){
     
     file_put_contents('test.txt', 'ok', FILE_APPEND | LOCK_EX);
     if($exist_user_post_id !== false){
-        file_put_contents('test.txt', 'if', FILE_APPEND | LOCK_EX);
         $user_post = array(
             'post_type'     => 'send_user'
         );
@@ -371,10 +370,10 @@ function isUser($user_id, $user_type){
     );
     $userdata = new WP_Query($sendUser);
     while($userdata->have_posts()) : $userdata->the_post();
-        $exist_user_id = strip_tags(get_post_meta(get_the_ID(), user_id, true));
-        $exist_user_type = strip_tags(get_post_meta(get_the_ID(), user_type, true));
+        $exist_user_id = strip_tags(get_post_meta(get_the_ID(), 'user_id', true));
+        $exist_user_type = strip_tags(get_post_meta(get_the_ID(), 'user_type', true));
         if($exist_user_id === $user_id && $exist_user_type === $user_type){
-            return $post->ID;
+            return get_the_ID();
         }
     endwhile;
     return false;

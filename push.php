@@ -1,21 +1,19 @@
 <?php
 
-add_action( 'transition_post_status', 'my_send_published_push', 10, 3);
-function my_send_published_push($new_status, $old_status, $post){
-    $success = "message";
-    if($new_status == 'publish'){
-        switch($old_status){
-            case 'draft':
-            case 'pending':
-            case 'auto-draft':
-            case 'future':
-            case 'publish':
-                search_send_user($post->ID);
-                break;
-            case 'private':
-                break;
-        }
+include('create_message.php');
+
+add_action( 'save_post', 'my_send_published_push', 10, 2);
+function my_send_published_push($post_id, $post){
+    if(get_post_type($post_id) !== 'push_message'){
+        return;
     }
+    if(wp_is_post_revision($post_id)){
+        return;
+    }
+    if($post->post_status == 'publish' || $post->post_status == 'inherit'){
+        search_send_user($post_id);
+    }
+    remove_action( 'save_post', 'my_send_published_push');
 }
 
 function search_send_user($post_id){
@@ -36,19 +34,19 @@ function search_send_user($post_id){
     endwhile;
 }
 
-function create_message($post_id){
-    
-    $response_format_text = [
-    "type" => "text",
-    "text" => $post_id
-    ];
-    
-    return $response_format_text;
-}
-
 function send_push_message($type, $id, $messages){
     $accessToken = get_option('line_accesstoken');
     
+    /*
+    $response_format_text = [
+    "type" => "text",
+    "text" => json_encode($messages)
+    ];
+        $post_data = [
+        "to" => $id,
+        "messages" => [$response_format_text]
+    ];
+    */
     $post_data = [
         "to" => $id,
         "messages" => [$messages]
@@ -65,4 +63,6 @@ function send_push_message($type, $id, $messages){
         ));
     $result = curl_exec($ch);
     curl_close($ch);
+    
+    file_put_contents('result.txt', $result ."\r\n", FILE_APPEND | LOCK_EX);
 }
