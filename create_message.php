@@ -1,6 +1,6 @@
 <?php
 
-define("MAX_ACTION_NUM", 5);
+define("MAX_ACTION_NUM", 3);
 define("MAX_COLUMNS_NUM", 5);
 
 function create_message($post_id){
@@ -157,14 +157,14 @@ function create_buttons_actions($post_id){
     "text" => ""
     ];
 
-    $actions_uri_element = [
-    "type" => "uri",
+    $actions_message_element = [
+    "type" => "message",
     "label" => "",
     "text" => ""
     ];
 
-    $actions_message_element = [
-    "type" => "message",
+    $actions_uri_element = [
+    "type" => "uri",
     "label" => "",
     "uri" => ""
     ];
@@ -193,7 +193,48 @@ function create_buttons_actions($post_id){
                 break;
         }
     }
-
+    
     return $actions;
     
+}
+
+function create_message_template_carousel($post_id){
+    
+    $clumns = create_carousel_clumns($post_id);
+    
+    $template = [
+    "type" => "carousel",
+    "columns"=> []
+    ];
+    
+    $template["columns"]= $clumns;
+
+    return $template;
+}
+
+function create_carousel_clumns($post_id){
+    
+    $clumns = [];
+    
+    $clumns_element = [
+        "thumbnailImageUrl" => "",
+        "title" => "",
+        "text" => "",
+        "actions" => []
+    ];
+    
+    for( $j = 1; $j <= MAX_COLUMNS_NUM; $j++){
+        $actions = [];
+        $columns_id = intval(get_post_meta($post_id, 'columns'.$j , true));
+        if($columns_id !== 0){
+            $actions = create_buttons_actions($columns_id);
+            $clumns_element["actions"] = $actions;
+            $clumns_element["thumbnailImageUrl"] = strval(strip_tags(get_post_meta($columns_id, 'thumbnailimageurl', true)));
+            $clumns_element["title"] = strval(strip_tags(get_post_meta($columns_id, 'template_buttons_title', true)));
+            $clumns_element["text"] = strval(strip_tags(get_post_meta($columns_id, 'template_buttons_text', true)));
+            array_push($clumns,$clumns_element);
+        }
+    }
+    
+    return $clumns;
 }

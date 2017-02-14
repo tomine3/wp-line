@@ -1,7 +1,7 @@
 <?php
 
-define("MAX_ACTION_NUM", 5);
-define("MAX_COLUMNS_NUM", 5);
+define("MAX_ACTION_NUM", 3);
+define("MAX_COLUMNS_NUM", 1);
 
 require_once( '../../../' . '/wp-load.php' );
 
@@ -77,7 +77,7 @@ $template_actions = [];
 
 $response_format_template_buttons = [
     "type" => "template",
-    "altText" => "this is a buttons template",
+    "altText" => "test",
     "template" => [
         "type" => "buttons",
         "thumbnailImageUrl" => "https://example.com/bot/images/image.jpg",
@@ -99,7 +99,7 @@ $template_clumns = [];
 
 $response_format_template_carousel = [
     "type" => "template",
-    "altText" => "this is a buttons template",
+    "altText" => "test",
     "template" => [
         "type" => "carousel",
         "columns" => $template_clumns
@@ -249,15 +249,27 @@ while($reply->have_posts()) : $reply->the_post();
                                 $clumns_element["thumbnailImageUrl"] = strval(strip_tags(get_post_meta($columns_id, thumbnailimageurl, true)));
                                 $clumns_element["title"] = strval(strip_tags(get_post_meta($columns_id, template_buttons_title, true)));
                                 $clumns_element["text"] = strval(strip_tags(get_post_meta($columns_id, template_buttons_text, true)));
-                                $clumns_element["text"] = $action_type;
+                                //$clumns_element["text"] = $action_type;
                                 array_push($template_clumns,$clumns_element);
                             }
                         }
                         $response_format_template_carousel["template"]["columns"] = $template_clumns;
+                        /*
+                        $response_format_text = [
+                        "type" => "text",
+                        "text" => json_encode($response_format_template_carousel)
+                        ];
+                        
+                        $post_data = [
+                            "replyToken" => $replyToken,
+                            "messages" => [$response_format_text]
+                        ];
+                        */
                         $post_data = [
                             "replyToken" => $replyToken,
                             "messages" => [$response_format_template_carousel]
                             ];
+                        
                         break;
                     default:
                         break;

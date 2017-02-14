@@ -37,16 +37,17 @@ function search_send_user($post_id){
 function send_push_message($type, $id, $messages){
     $accessToken = get_option('line_accesstoken');
     
-    /*
+/*
     $response_format_text = [
     "type" => "text",
     "text" => json_encode($messages)
     ];
-        $post_data = [
+    $post_data = [
         "to" => $id,
         "messages" => [$response_format_text]
     ];
-    */
+*/
+
     $post_data = [
         "to" => $id,
         "messages" => [$messages]
