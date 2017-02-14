@@ -1,6 +1,6 @@
 <?php
 
-define("MAX_ACTION_NUM", 5);
+define("MAX_ACTION_NUM", 3);
 define("MAX_COLUMNS_NUM", 5);
 
 require_once( '../../../' . '/wp-load.php' );
@@ -10,6 +10,7 @@ $accessToken = get_option('line_accesstoken');
 
 //ユーザーからのメッセージ取得
 $json_string = file_get_contents('php://input');
+//file_put_contents('user.txt', "update" ."\r\n", FILE_APPEND | LOCK_EX);
 
 $jsonObj = json_decode($json_string);
 
@@ -19,10 +20,12 @@ $text = $jsonObj->{"events"}[0]->{"message"}->{"text"};
 //ReplyToken取得
 $replyToken = $jsonObj->{"events"}[0]->{"replyToken"};
 
+$event_type = $jsonObj->{"events"}[0]->{"type"};
+
 //返信データ作成
 $response_format_text = [
     "type" => "text",
-    "text" => "aa"
+    "text" => $event_type
     ];
 
 $response_format_image = [
@@ -114,13 +117,19 @@ $replyRule = array(
     "order"		=> "DESC"
 );
 
+if ($event_type === "join" || $event_type === "follow"){
+    registId($jsonObj->{"events"}[0]->{"source"}->{"userId"}, $jsonObj->{"events"}[0]->{"source"}->{"type"}, $event_type = $jsonObj->{"events"}[0]->{"timestamp"});
+}
+else if( $event_type === "leave" || $event_type === "unfollow"){
+    deleteId($jsonObj->{"events"}[0]->{"source"}->{"userId"}, $jsonObj->{"events"}[0]->{"source"}->{"type"}, $event_type = $jsonObj->{"events"}[0]->{"timestamp"});
+}
+
 //カスタム投稿タイプ「Reply Rule」から返信データを抽出
 $reply = new WP_Query($replyRule);
 while($reply->have_posts()) : $reply->the_post();
     $matcing_type = strip_tags(get_post_meta($post->ID, matching_type, true));
     $title = get_the_title();
     $ismatch = matching_type_check($matcing_type, $title, $text);
-    //if($title === $text){
     if($ismatch === true){
         $reply_type = get_post_meta($post->ID, reply_type, true);
         switch ($reply_type) {
@@ -132,16 +141,16 @@ while($reply->have_posts()) : $reply->the_post();
                     ];
                 break;
             case 'image':
-                $response_format_image["originalContentUrl"] = strip_tags(get_post_meta($post->ID, image_originalcontenturl, true));
-                $response_format_image["previewImageUrl"] = strip_tags(get_post_meta($post->ID, image_previewimageurl, true));
+                $response_format_image["originalContentUrl"] = strip_tags(get_post_meta($post->ID, originalcontenturl, true));
+                $response_format_image["previewImageUrl"] = strip_tags(get_post_meta($post->ID, previewimageurl, true));
                 $post_data = [
                     "replyToken" => $replyToken,
                     "messages" => [$response_format_image]
                     ];
                 break;
             case 'video':
-                $response_format_video["originalContentUrl"] = strip_tags(get_post_meta($post->ID, video_originalcontenturl, true));
-                $response_format_video["previewImageUrl"] = strip_tags(get_post_meta($post->ID, video_previewimageurl, true));
+                $response_format_video["originalContentUrl"] = strip_tags(get_post_meta($post->ID, originalcontenturl, true));
+                $response_format_video["previewImageUrl"] = strip_tags(get_post_meta($post->ID, previewimageurl, true));
                 $post_data = [
                     "replyToken" => $replyToken,
                     "messages" => [$response_format_video]
@@ -166,8 +175,6 @@ while($reply->have_posts()) : $reply->the_post();
                     ];
                 break;
             case 'template':
-                //$response_format_sticker["packageId"] = strval(strip_tags(get_post_meta($post->ID, packageid, true)));
-                //$response_format_sticker["stickerId"] = strval(strip_tags(get_post_meta($post->ID, stickerid, true)));
                 $template_type = get_post_meta($post->ID, template_type, true);
                 $response_format_template_buttons["altText"] = strval(strip_tags(get_post_meta($post->ID, alttext, true)));
                 $response_format_template_buttons["template"]["type"] = $template_type;
@@ -239,7 +246,6 @@ while($reply->have_posts()) : $reply->the_post();
                                 $clumns_element["thumbnailImageUrl"] = strval(strip_tags(get_post_meta($columns_id, thumbnailimageurl, true)));
                                 $clumns_element["title"] = strval(strip_tags(get_post_meta($columns_id, template_buttons_title, true)));
                                 $clumns_element["text"] = strval(strip_tags(get_post_meta($columns_id, template_buttons_text, true)));
-                                $clumns_element["text"] = $action_type;
                                 array_push($template_clumns,$clumns_element);
                             }
                         }
@@ -248,6 +254,7 @@ while($reply->have_posts()) : $reply->the_post();
                             "replyToken" => $replyToken,
                             "messages" => [$response_format_template_carousel]
                             ];
+                        
                         break;
                     default:
                         break;
@@ -257,8 +264,6 @@ while($reply->have_posts()) : $reply->the_post();
                 break;
         }
     }
-    //echo strip_tags(get_post_meta($post->ID, video_originalcontenturl, true));
-    //echo strip_tags(get_post_meta($post->ID, video_previewimageurl, true));
 endwhile;
 wp_reset_postdata();
 
@@ -297,5 +302,74 @@ function matching_type_check($matcing_type, $title, $text){
             }
         }
     }
+    return false;
+}
+
+function registId($user_id, $user_type, $timestamp){
+    
+    $exist_user_post_id = isUser($user_id, $user_type);
+    wp_reset_postdata();
+    
+    if($exist_user_post_id !== false){
+        $user_post = array(
+            'post_type'     => 'send_user'
+        );
+        $update_id = wp_update_post( $user_post );
+        if($update_id) {
+            update_post_meta($update_id, 'time_stamp', $timestamp);
+            update_post_meta($update_id, 'isdelete', false);
+        }
+    }
+    else{
+        $user_post = array(
+            'post_title'    => $user_type.$timestamp,
+            'post_status'   => 'publish',
+            'post_author'   => 1,
+            'post_type'     => 'send_user'
+        );
+        $insert_id = wp_insert_post( $user_post );
+        if($insert_id) {
+            update_post_meta($insert_id, 'user_type', $user_type);
+            update_post_meta($insert_id, 'user_id', $user_id);
+            update_post_meta($insert_id, 'time_stamp', $timestamp);
+            update_post_meta($insert_id, 'isdelete', false);
+        }
+    }
+}
+
+function deleteId($user_id, $user_type, $timestamp){
+    
+    $exist_user_post_id = isUser($user_id, $user_type);
+    wp_reset_postdata();
+    
+    file_put_contents('test.txt', 'ok', FILE_APPEND | LOCK_EX);
+    if($exist_user_post_id !== false){
+        $user_post = array(
+            'post_type'     => 'send_user'
+        );
+        $update_id = wp_update_post( $user_post );
+        
+        if($update_id) {
+            update_post_meta($update_id, 'time_stamp', $timestamp);
+            update_post_meta($update_id, 'isdelete', true);
+        }
+    }
+}
+
+function isUser($user_id, $user_type){
+
+    $sendUser = array(
+        "post_type" => "send_user",
+        "orderby"	=> "date",
+        "order"		=> "DESC"
+    );
+    $userdata = new WP_Query($sendUser);
+    while($userdata->have_posts()) : $userdata->the_post();
+        $exist_user_id = strip_tags(get_post_meta(get_the_ID(), 'user_id', true));
+        $exist_user_type = strip_tags(get_post_meta(get_the_ID(), 'user_type', true));
+        if($exist_user_id === $user_id && $exist_user_type === $user_type){
+            return get_the_ID();
+        }
+    endwhile;
     return false;
 }
