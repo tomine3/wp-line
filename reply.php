@@ -1,7 +1,7 @@
 <?php
 
 define("MAX_ACTION_NUM", 3);
-define("MAX_COLUMNS_NUM", 1);
+define("MAX_COLUMNS_NUM", 5);
 
 require_once( '../../../' . '/wp-load.php' );
 
@@ -77,7 +77,7 @@ $template_actions = [];
 
 $response_format_template_buttons = [
     "type" => "template",
-    "altText" => "test",
+    "altText" => "this is a buttons template",
     "template" => [
         "type" => "buttons",
         "thumbnailImageUrl" => "https://example.com/bot/images/image.jpg",
@@ -99,7 +99,7 @@ $template_clumns = [];
 
 $response_format_template_carousel = [
     "type" => "template",
-    "altText" => "test",
+    "altText" => "this is a buttons template",
     "template" => [
         "type" => "carousel",
         "columns" => $template_clumns
@@ -130,7 +130,6 @@ while($reply->have_posts()) : $reply->the_post();
     $matcing_type = strip_tags(get_post_meta($post->ID, matching_type, true));
     $title = get_the_title();
     $ismatch = matching_type_check($matcing_type, $title, $text);
-    //if($title === $text){
     if($ismatch === true){
         $reply_type = get_post_meta($post->ID, reply_type, true);
         switch ($reply_type) {
@@ -176,8 +175,6 @@ while($reply->have_posts()) : $reply->the_post();
                     ];
                 break;
             case 'template':
-                //$response_format_sticker["packageId"] = strval(strip_tags(get_post_meta($post->ID, packageid, true)));
-                //$response_format_sticker["stickerId"] = strval(strip_tags(get_post_meta($post->ID, stickerid, true)));
                 $template_type = get_post_meta($post->ID, template_type, true);
                 $response_format_template_buttons["altText"] = strval(strip_tags(get_post_meta($post->ID, alttext, true)));
                 $response_format_template_buttons["template"]["type"] = $template_type;
@@ -249,22 +246,10 @@ while($reply->have_posts()) : $reply->the_post();
                                 $clumns_element["thumbnailImageUrl"] = strval(strip_tags(get_post_meta($columns_id, thumbnailimageurl, true)));
                                 $clumns_element["title"] = strval(strip_tags(get_post_meta($columns_id, template_buttons_title, true)));
                                 $clumns_element["text"] = strval(strip_tags(get_post_meta($columns_id, template_buttons_text, true)));
-                                //$clumns_element["text"] = $action_type;
                                 array_push($template_clumns,$clumns_element);
                             }
                         }
                         $response_format_template_carousel["template"]["columns"] = $template_clumns;
-                        /*
-                        $response_format_text = [
-                        "type" => "text",
-                        "text" => json_encode($response_format_template_carousel)
-                        ];
-                        
-                        $post_data = [
-                            "replyToken" => $replyToken,
-                            "messages" => [$response_format_text]
-                        ];
-                        */
                         $post_data = [
                             "replyToken" => $replyToken,
                             "messages" => [$response_format_template_carousel]
@@ -279,8 +264,6 @@ while($reply->have_posts()) : $reply->the_post();
                 break;
         }
     }
-    //echo strip_tags(get_post_meta($post->ID, video_originalcontenturl, true));
-    //echo strip_tags(get_post_meta($post->ID, video_previewimageurl, true));
 endwhile;
 wp_reset_postdata();
 
