@@ -1,9 +1,9 @@
 <?php
 
-include('create_message.php');
+require_once('create_message.php');
 
-add_action( 'save_post', 'my_send_published_push', 10, 2);
-function my_send_published_push($post_id, $post){
+add_action( 'save_post', 'push_main_proc', 10, 2);
+function push_main_proc($post_id, $post){
     if(get_post_type($post_id) !== 'push_message'){
         return;
     }
@@ -13,7 +13,7 @@ function my_send_published_push($post_id, $post){
     if($post->post_status == 'publish' || $post->post_status == 'inherit'){
         search_send_user($post_id);
     }
-    remove_action( 'save_post', 'my_send_published_push');
+    remove_action( 'save_post', 'push_main_proc');
 }
 
 function search_send_user($post_id){
