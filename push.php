@@ -40,18 +40,25 @@ function send_push_message($type, $id, $messages){
 /*
     $response_format_text = [
     "type" => "text",
-    "text" => json_encode($messages)
+    "text" => json_encode(isset($messages["type"]))
     ];
     $post_data = [
         "to" => $id,
         "messages" => [$response_format_text]
     ];
 */
-
-    $post_data = [
-        "to" => $id,
-        "messages" => [$messages]
-    ];
+    if(isset($messages["type"])){
+        $post_data = [
+            "to" => $id,
+            "messages" => [$messages]
+        ];
+    }else{
+        $post_data =[
+            "to" => $id,
+            "messages" => [] 
+        ];
+        $post_data["messages"] = $messages;
+    }
 
     $ch = curl_init("https://api.line.me/v2/bot/message/push");
     curl_setopt($ch, CURLOPT_POST, true);
