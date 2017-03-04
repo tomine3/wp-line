@@ -2,6 +2,7 @@
 
 define("MAX_ACTION_NUM", 3);
 define("MAX_COLUMNS_NUM", 5);
+define("MAX_MULTI_NUM", 5);
 
 function create_message($post_id){
     
@@ -24,6 +25,9 @@ function create_message($post_id){
             break;
         case 'template':
             $message = create_message_template($post_id);
+            break;
+        case 'multi':
+            $message = create_message_multi($post_id);
             break;
     }
     wp_reset_postdata();
@@ -254,4 +258,19 @@ function create_carousel_clumns($post_id){
     }
     
     return $clumns;
+}
+
+function create_message_multi($post_id){
+  
+    $response_format_multi = [];
+
+    for( $j = 1; $j <= MAX_MULTI_NUM; $j++){
+        $multi_message_id = get_post_meta($post_id, 'message'.$j , true);
+        if($multi_message_id !== "null"){
+            $message = create_message($multi_message_id);
+            array_push($response_format_multi,$message);
+        }
+    }
+    
+    return $response_format_multi;
 }
