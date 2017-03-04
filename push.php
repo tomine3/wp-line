@@ -52,7 +52,7 @@ function send_push_message($type, $id, $messages){
         "to" => $id,
         "messages" => [$messages]
     ];
-    
+
     $ch = curl_init("https://api.line.me/v2/bot/message/push");
     curl_setopt($ch, CURLOPT_POST, true);
     curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'POST');
