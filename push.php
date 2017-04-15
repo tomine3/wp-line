@@ -4,6 +4,9 @@ require_once('create_message.php');
 
 add_action( 'save_post', 'push_main_proc', 10, 2);
 function push_main_proc($post_id, $post){
+    if(empty(get_post_meta($post_id, "is_send", true))){
+        return;
+    }
     if(get_post_type($post_id) !== 'push_message'){
         return;
     }
