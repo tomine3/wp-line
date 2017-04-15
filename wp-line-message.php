@@ -10,6 +10,7 @@ Author URI: http://www.example.com
 
 include('admin/custom_field.php');
 include('admin/custom_post.php');
+include('admin/custom_admin_menu.php');
 include('push.php');
 
 add_action( 'admin_menu', 'wpline_menu' );
