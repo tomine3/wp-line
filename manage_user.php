@@ -38,7 +38,6 @@ function deleteId($user_id, $user_type, $timestamp){
     $exist_user_post_id = isUser($user_id, $user_type);
     wp_reset_postdata();
     
-    file_put_contents('test.txt', 'ok', FILE_APPEND | LOCK_EX);
     if($exist_user_post_id !== false){
         $user_post = array(
             'post_type'     => 'send_user'

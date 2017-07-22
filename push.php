@@ -75,5 +75,5 @@ function send_push_message($type, $id, $messages){
     $result = curl_exec($ch);
     curl_close($ch);
     
-    file_put_contents('result.txt', $result ."\r\n", FILE_APPEND | LOCK_EX);
+    //file_put_contents('result.txt', $result ."\r\n", FILE_APPEND | LOCK_EX);
 }
