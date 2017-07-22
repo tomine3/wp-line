@@ -7,7 +7,6 @@ require_once( '../../../' . '/wp-load.php' );
 recieve_main_proc();
 
 function recieve_main_proc(){
-    
     $jsonObj = recieve_line_response();
     
     $type = $jsonObj->{"events"}[0]->{"message"}->{"type"};
@@ -17,7 +16,7 @@ function recieve_main_proc(){
     switch ($event_type) {
         case 'message':
             $text = $jsonObj->{"events"}[0]->{"message"}->{"text"};
-            reply_main_proc($text, $type, $replyToken, $event_type);
+            reply_main_proc($text, $type, $replyToken, $event_type, $jsonObj->{"events"}[0]->{"source"}->{"userId"});
             break;
         case 'join':
         case 'follow':
@@ -48,8 +47,6 @@ function recieve_line_response(){
 
     //ユーザーからのメッセージ取得
     $json_string = file_get_contents('php://input');
-    
-    //file_put_contents('user.txt', "update" ."\r\n", FILE_APPEND | LOCK_EX);
     
     $jsonObj = json_decode($json_string);
     

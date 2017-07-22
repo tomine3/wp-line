@@ -1,16 +1,26 @@
 <?php
 
 require_once('create_message.php');
+require_once('admin_mode.php');
 
-function reply_main_proc($text, $type, $replyToken, $event_type){
-    
+function reply_main_proc($text, $type, $replyToken, $event_type, $user_id){
+
+    $user_post_id = search_user($user_id);
+    if(is_wpline_admin($user_post_id) === true){
+        $messages = admin_mode($user_post_id, $text);
+        
+    }else{
+        $messages = search_reply_rule($text, $event_type);
+    }
+
     //メッセージ以外のときは何も返さず終了
     if($type != "text"){
         exit;
+    
     }
     
-    $messages = search_reply_rule($text, $event_type);
-    
+    //$messages = search_reply_rule($text, $event_type);
+
     send_reply_message($replyToken, $messages, $type);
     
 }
